@@ -192,10 +192,11 @@ main (int argc, char *argv[])
 
   // REM params
   NS_LOG_INFO ("Set REM params");
-  Config::SetDefault ("ns3::RemQueueDisc::Mode", StringValue ("QUEUE_MODE_PACKETS"));
+  //Config::SetDefault ("ns3::RemQueueDisc::Mode", StringValue ("QUEUE_MODE_PACKETS"));
   Config::SetDefault ("ns3::RemQueueDisc::MeanPktSize", UintegerValue (meanPktSize));
   Config::SetDefault ("ns3::RemQueueDisc::Target", UintegerValue (700));
-  Config::SetDefault ("ns3::RemQueueDisc::QueueLimit", UintegerValue (400));
+  //Config::SetDefault ("ns3::RemQueueDisc::QueueLimit", UintegerValue (400));
+  Config::SetDefault ("ns3::RemQueueDisc::MaxSize", StringValue ("100p"));
 
   NS_LOG_INFO ("Install internet stack on all nodes.");
   InternetStackHelper internet;
@@ -203,7 +204,8 @@ main (int argc, char *argv[])
 
   TrafficControlHelper tchPfifo;
   uint16_t handle = tchPfifo.SetRootQueueDisc ("ns3::PfifoFastQueueDisc");
-  tchPfifo.AddInternalQueues (handle, 3, "ns3::DropTailQueue", "MaxPackets", UintegerValue (1000));
+  //tchPfifo.AddInternalQueues (handle, 3, "ns3::DropTailQueue", "MaxPackets", UintegerValue (1000));
+  tchPfifo.AddInternalQueues (handle, 3, "ns3::DropTailQueue", "MaxSize", StringValue ("1000p"));
 
   TrafficControlHelper tchRem;
   tchRem.SetRootQueueDisc ("ns3::RemQueueDisc", "LinkBandwidth", StringValue (remLinkDataRate));
@@ -302,9 +304,10 @@ main (int argc, char *argv[])
   Simulator::Stop (Seconds (sink_stop_time));
   Simulator::Run ();
 
-  RemQueueDisc::Stats st = StaticCast<RemQueueDisc> (queueDiscs.Get (0))->GetStats ();
+  //RemQueueDisc::Stats st = StaticCast<RemQueueDisc> (queueDiscs.Get (0))->GetStats ();
+  QueueDisc::Stats st = queueDiscs.Get (0)->GetStats ();
 
-  if (st.qLimDrop != 0)
+  if (/*st.qLimDrop != 0*/st.GetNDroppedPackets (RemQueueDisc::FORCED_DROP) != 0)
     {
       std::cout << "There should be no drops due to queue full." << std::endl;
       exit (1);
@@ -321,8 +324,12 @@ main (int argc, char *argv[])
   if (printRemStats)
     {
       std::cout << "*** REM stats from Node 2 queue ***" << std::endl;
-      std::cout << "\t " << st.unforcedDrop << " drops due to prob mark" << std::endl;
-      std::cout << "\t " << st.qLimDrop << " drops due to queue limits" << std::endl;
+      //std::cout << "\t " << st.unforcedDrop << " drops due to prob mark" << std::endl;
+      //std::cout << "\t " << st.qLimDrop << " drops due to queue limits" << std::endl;
+      std::cout << "\t " << st.GetNDroppedPackets (RemQueueDisc::UNFORCED_DROP)
+                << " drops due to prob mark" << std::endl;
+      std::cout << "\t " << st.GetNDroppedPackets (RemQueueDisc::FORCED_DROP)
+                << " drops due to queue limits" << std::endl;
     }
 
   Simulator::Destroy ();

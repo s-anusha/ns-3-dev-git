@@ -175,12 +175,12 @@ RemQueueDisc::GetQueueSize (void)
     }
 }
 */
-RemQueueDisc::Stats
+/*RemQueueDisc::Stats
 RemQueueDisc::GetStats ()
 {
   NS_LOG_FUNCTION (this);
   return m_stats;
-}
+}*/
 
 int64_t
 RemQueueDisc::AssignStreams (int64_t stream)
@@ -201,9 +201,9 @@ RemQueueDisc::InitializeParams (void)
   m_count = 0;
   m_countInBytes = 0;
 
-  m_stats.qLimDrop = 0;
-  m_stats.unforcedDrop = 0;
-  m_stats.unforcedMark = 0;
+  //m_stats.qLimDrop = 0;
+  //m_stats.unforcedDrop = 0;
+  //m_stats.unforcedMark = 0;
 
   m_ptc = m_linkBandwidth.GetBitRate () / (8.0 * m_meanPktSize);
 }
@@ -231,7 +231,7 @@ RemQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
       // Drops due to queue limit: reactive
       //Drop (item);
       DropBeforeEnqueue (item, FORCED_DROP);
-      m_stats.qLimDrop++;
+      //m_stats.qLimDrop++;
       return false;
     }
   else if (!m_useEcn && DropEarly (item))
@@ -239,7 +239,7 @@ RemQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
       // Early probability drop: proactive
       //Drop (item);
       DropBeforeEnqueue (item, UNFORCED_DROP);
-      m_stats.unforcedDrop++;
+      //m_stats.unforcedDrop++;
       return false;
     }
 
@@ -290,7 +290,7 @@ RemQueueDisc::DoDequeue (void)
         {
           if (DropEarly (item) && item->Mark ())
             {
-              m_stats.unforcedMark++;
+              //m_stats.unforcedMark++;
             }
         }
 

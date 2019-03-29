@@ -227,15 +227,15 @@ RemQueueDiscTestCase::RunRemTest (QueueSizeUnit/*StringValue*/ mode)
   NS_TEST_EXPECT_MSG_EQ ((item == 0), true, "There are really no packets in there");
 
 
-  /*// test 2: more data with defaults, unforced drops but no forced drops
+  // test 2: more data with defaults, unforced drops but no forced drops
   queue = CreateObject<RemQueueDisc> ();
   pktSize = 1000;
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("MaxSize", QueueSizeValue (QueueSize (mode, qSize))),
                          true, "Verify that we can actually set the attribute MaxSize");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("Mode", mode), true,
+  /*NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("Mode", mode), true,
                          "Verify that we can actually set the attribute Mode");
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("QueueLimit", UintegerValue (qSize)), true,
-                         "Verify that we can actually set the attribute QueueLimit");
+                         "Verify that we can actually set the attribute QueueLimit");*/
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("Alpha", DoubleValue (0.1)), true,
                          "Verify that we can actually set the attribute Alpha");
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("Gamma", DoubleValue (0.1)), true,
@@ -251,104 +251,17 @@ RemQueueDiscTestCase::RunRemTest (QueueSizeUnit/*StringValue*/ mode)
   Simulator::Stop (Seconds (8.0));
   Simulator::Run ();
 
-  RemQueueDisc::Stats st = StaticCast<RemQueueDisc> (queue)->GetStats ();
-  //uint32_t test2 = st.unforcedDrop;
-  uint32_t test2 = st.GetNDroppedPackets (RemQueueDisc::UNFORCED_DROP);
+  /*RemQueueDisc::Stats st = StaticCast<RemQueueDisc> (queue)->GetStats ();
+  uint32_t test2 = st.unforcedDrop;
   NS_TEST_EXPECT_MSG_NE (test2, 0, "There should be unforced drops");
-  //NS_TEST_EXPECT_MSG_EQ (st.qLimDrop, 0, "There should be no forced drops");
+  NS_TEST_EXPECT_MSG_EQ (st.qLimDrop, 0, "There should be no forced drops");*/
+  QueueDisc::Stats st = queue->GetStats ();
+  uint32_t test2 = st.GetNDroppedPackets (RemQueueDisc::UNFORCED_DROP);
+  NS_TEST_EXPECT_MSG_NE (test2, 0, "There should be some unforced drops");
   NS_TEST_EXPECT_MSG_EQ (st.GetNDroppedPackets (RemQueueDisc::FORCED_DROP), 0, "There should be zero forced drops");
 
 
-  // test 3: same as test 2, but with higher Target
-  queue = CreateObject<RemQueueDisc> ();
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("MaxSize", QueueSizeValue (QueueSize (mode, qSize))),
-                         true, "Verify that we can actually set the attribute MaxSize");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("Mode", mode), true,
-                         "Verify that we can actually set the attribute Mode");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("QueueLimit", UintegerValue (qSize)), true,
-                         "Verify that we can actually set the attribute QueueLimit");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("Alpha", DoubleValue (0.1)), true,
-                         "Verify that we can actually set the attribute Alpha");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("Gamma", DoubleValue (0.1)), true,
-                         "Verify that we can actually set the attribute Gamma");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("UpdateInterval", TimeValue (Seconds (0.002))), true,
-                         "Verify that we can actually set the attribute UpdateInterval");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("Target", UintegerValue ( 65)), true,
-                         "Verify that we can actually set the attribute Target");
-  queue->Initialize ();
-  EnqueueWithDelay (queue, pktSize, 600,false);
-  DequeueWithDelay (queue,0.012,600);
-
-  Simulator::Stop (Seconds (8.0));
-  Simulator::Run ();
-  st = StaticCast<RemQueueDisc> (queue)->GetStats ();
-  //uint32_t test3 = st.unforcedDrop;
-  uint32_t test3 = st.GetNDroppedPackets (RemQueueDisc::UNFORCED_DROP);
-  NS_TEST_EXPECT_MSG_LT (test3, test2, "Test 3 should have less unforced drops than test 2");
-  //NS_TEST_EXPECT_MSG_EQ (st.qLimDrop, 0, "There should be zero forced drops");
-  NS_TEST_EXPECT_MSG_EQ (st.GetNDroppedPackets (RemQueueDisc::FORCED_DROP), 0, "There should be zero forced drops");
-
-  // test 4: Packets are ECN capable, but REM queue disc is not ECN enabled
-  queue = CreateObject<RemQueueDisc> ();
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("MaxSize", QueueSizeValue (QueueSize (mode, qSize))),
-                         true, "Verify that we can actually set the attribute MaxSize");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("Mode", mode), true,
-                         "Verify that we can actually set the attribute Mode");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("QueueLimit", UintegerValue (qSize)), true,
-                         "Verify that we can actually set the attribute QueueLimit");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("Alpha", DoubleValue (0.1)), true,
-                         "Verify that we can actually set the attribute Alpha");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("Gamma", DoubleValue (0.1)), true,
-                         "Verify that we can actually set the attribute Gamma");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("UpdateInterval", TimeValue (Seconds (0.002))), true,
-                         "Verify that we can actually set the attribute UpdateInterval");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("Target", UintegerValue (65)), true,
-                         "Verify that we can actually set the attribute Target");
-  queue->Initialize ();
-  EnqueueWithDelay (queue, pktSize, 600,true);
-  DequeueWithDelay (queue,0.012,600);
-
-  Simulator::Stop (Seconds (8.0));
-  Simulator::Run ();
-  st = StaticCast<RemQueueDisc> (queue)->GetStats ();
-  uint32_t test4 = st.GetNDroppedPackets (RemQueueDisc::UNFORCED_DROP);
-  // REM queue disc is not ECN enabled, so there should be only unforced drops, no unforced marks
-  //NS_TEST_EXPECT_MSG_NE (st.unforcedDrop, 0, "There should be some unforced drops");
-  //NS_TEST_EXPECT_MSG_EQ (st.unforcedMark, 0, "There should be no unforced marks");
-  NS_TEST_EXPECT_MSG_GT (test4, test2, "Test 4 should have more unforced drops than test 2");
-  NS_TEST_EXPECT_MSG_EQ (st.GetNDroppedPackets (RemQueueDisc::FORCED_DROP), 0, "There should be zero forced drops");
-
-  //test 5: Packets are ECN capable and REM queue disc is ECN enabled
-  queue = CreateObject<RemQueueDisc> ();
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("MaxSize", QueueSizeValue (QueueSize (mode, qSize))),
-                         true, "Verify that we can actually set the attribute MaxSize");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("Mode", mode), true,
-                         "Verify that we can actually set the attribute Mode");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("QueueLimit", UintegerValue (qSize)), true,
-                         "Verify that we can actually set the attribute QueueLimit");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("Alpha", DoubleValue (0.1)), true,
-                         "Verify that we can actually set the attribute Alpha");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("Gamma", DoubleValue (0.1)), true,
-                         "Verify that we can actually set the attribute Gamma");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("UpdateInterval", TimeValue (Seconds (0.002))), true,
-                         "Verify that we can actually set the attribute UpdateInterval");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("Target", UintegerValue (65)), true,
-                         "Verify that we can actually set the attribute Target");
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("UseEcn", BooleanValue (true)), true,
-                         "Verify that we can actually set the attribute UseECN");
-  queue->Initialize ();
-  EnqueueWithDelay (queue, pktSize, 600,true);
-  DequeueWithDelay (queue,0.012,600);
-  Simulator::Stop (Seconds (8.0));
-  Simulator::Run ();
-
-  st = StaticCast<RemQueueDisc> (queue)->GetStats ();
-  uint32_t test5 = st.GetNDroppedPackets (RemQueueDisc::UNFORCED_DROP);
-  NS_TEST_EXPECT_MSG_LT (test5, test4, "Test 5 should have less unforced drops than test 4");
-  NS_TEST_EXPECT_MSG_EQ (st.GetNDroppedPackets (RemQueueDisc::FORCED_DROP), 0, "There should be zero forced drops");
-  // Packets are ECN capable, REM queue disc is ECN enabled; there should be only unforced marks, no unforced drops
-  //NS_TEST_EXPECT_MSG_EQ (st.unforcedDrop, 0, "There should be no unforced drops");
-  //NS_TEST_EXPECT_MSG_NE (st.unforcedMark, 0, "There should be some unforced marks");*/
+  
 
 }
 

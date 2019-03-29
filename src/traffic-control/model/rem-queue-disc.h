@@ -70,12 +70,12 @@ public:
   /**
    * \brief Stats
    */
-  typedef struct
+  /*typedef struct
   {
     uint32_t unforcedDrop;      //!< Early probability drops: proactive
     uint32_t qLimDrop;          //!< Drops due to queue limit: reactive
     uint32_t unforcedMark;      //!< Keeps count of the marked packet
-  } Stats;
+  } Stats;*/
 
   /**
    * \brief Set the operating mode of this queue.
@@ -110,7 +110,7 @@ public:
    *
    * \returns The drop statistics.
    */
-  Stats GetStats ();
+  //Stats GetStats ();
 
   /**
    * Assign a fixed random variable stream number to the random variables
@@ -156,7 +156,7 @@ private:
    */
   void RunUpdateRule ();
 
-  Stats m_stats;                                //!< REM statistics
+  //Stats m_stats;                                //!< REM statistics
 
   // ** Variables supplied by user
   //Queue::QueueMode m_mode;                      //!< Mode (bytes or packets)
