@@ -103,7 +103,7 @@ public:
    *
    * \param lim The limit in bytes or packets.
    */
-  void SetQueueLimit (uint32_t lim);
+  //void SetQueueLimit (uint32_t lim);
 
   /**
    * \brief Get REM statistics after running.
@@ -125,6 +125,9 @@ public:
   // Reasons for dropping packets
   static constexpr const char* UNFORCED_DROP = "Unforced drop";  //!< Early probability drops: proactive
   static constexpr const char* FORCED_DROP = "Forced drop";      //!< Drops due to queue limit: reactive
+  // Reasons for marking packets
+  static constexpr const char* UNFORCED_MARK = "Unforced mark";  //!< Early probability marks
+  static constexpr const char* FORCED_MARK = "Forced mark";      //!< Forced marks, m_qAvg > m_maxTh
 
 protected:
   /**
@@ -156,7 +159,7 @@ private:
    */
   void RunUpdateRule ();
 
-  //Stats m_stats;                                //!< REM statistics
+  Stats m_stats;                                //!< REM statistics
 
   // ** Variables supplied by user
   //Queue::QueueMode m_mode;                      //!< Mode (bytes or packets)
