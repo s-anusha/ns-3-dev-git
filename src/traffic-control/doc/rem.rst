@@ -39,8 +39,7 @@ Attributes
 
 The key attributes that the RemQueueDisc class holds include the following: 
 
-* ``Mode:`` REM operating mode (BYTES or PACKETS). The default mode is PACKETS. 
-* ``QueueLimit:`` The maximum number of bytes or packets the queue can hold. The default value is 50 bytes / packets.
+* ``MaxSize:`` The maximum number of packets accepted by this queue disc. The default value is 25 packets.
 * ``MeanPktSize:`` Mean packet size in bytes. The default value is 1000 bytes.
 * ``UpdateInterval:`` Time period to calculate drop probability. The default value is 2 ms. 
 * ``InputWeight:`` Weight assigned to input rate. The default value is 1.0. 
@@ -49,11 +48,12 @@ The key attributes that the RemQueueDisc class holds include the following:
 * ``Alpha:`` Value of Alpha. The default value is 0.1.
 * ``Gamma:`` Value of Beta. The default value is 0.001.
 * ``LinkBandwidth:`` The REM link bandwidth. The default value is 1.5 Mbps.
+* ``UseECN:`` True to use ECN (packets are marked instead of being dropped).
 
 Examples
 ========
 
-The example for REM is `rem-example.cc` located in ``src/examples/traffic-control``.  To run the file (the first invocation below shows the available
+The example for REM is `rem-example.cc` located in ``src/traffic-control/examples``.  To run the file (the first invocation below shows the available
 command-line options):
 
 :: 
@@ -66,11 +66,13 @@ The expected output from the previous commands are 10 .pcap files.
 Validation
 **********
 
-The REM model is tested using :cpp:class:`RemQueueDiscTestSuite` class defined in `src/traffic-control/test/rem-queue-test-suite.cc`. The suite includes 3 test cases:
+The REM model is tested using :cpp:class:`RemQueueDiscTestSuite` class defined in `src/traffic-control/test/rem-queue-test-suite.cc`. The suite includes 5 test cases:
 
 * Test 1: simple enqueue/dequeue with defaults, no drops
 * Test 2: more data with defaults, unforced drops but no forced drops
 * Test 3: same as test 2, but with higher Target
+* Test 4: Packets are ECN capable, but REM queue disc is not ECN enabled
+* Test 5: Packets are ECN capable and REM queue disc is ECN enabled
 
 The test suite can be run using the following commands: 
 

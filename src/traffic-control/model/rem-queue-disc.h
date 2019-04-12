@@ -68,51 +68,6 @@ public:
   virtual ~RemQueueDisc ();
 
   /**
-   * \brief Stats
-   */
-  /*typedef struct
-  {
-    uint32_t unforcedDrop;      //!< Early probability drops: proactive
-    uint32_t qLimDrop;          //!< Drops due to queue limit: reactive
-    uint32_t unforcedMark;      //!< Keeps count of the marked packet
-  } Stats;*/
-
-  /**
-   * \brief Set the operating mode of this queue.
-   *
-   * \param mode The operating mode of this queue.
-   */
-  //void SetMode (Queue::QueueMode mode);
-
-  /**
-   * \brief Get the encapsulation mode of this queue.
-   *
-   * \returns The encapsulation mode of this queue.
-   */
-  //Queue::QueueMode GetMode (void);
-
-  /**
-   * \brief Get the current value of the queue in bytes or packets.
-   *
-   * \returns The queue size in bytes or packets.
-   */
-  //uint32_t GetQueueSize (void);
-
-  /**
-   * \brief Set the limit of the queue in bytes or packets.
-   *
-   * \param lim The limit in bytes or packets.
-   */
-  //void SetQueueLimit (uint32_t lim);
-
-  /**
-   * \brief Get REM statistics after running.
-   *
-   * \returns The drop statistics.
-   */
-  //Stats GetStats ();
-
-  /**
    * Assign a fixed random variable stream number to the random variables
    * used by this model. Return the number of streams (possibly zero) that
    * have been assigned.
@@ -127,7 +82,7 @@ public:
   static constexpr const char* FORCED_DROP = "Forced drop";      //!< Drops due to queue limit: reactive
   // Reasons for marking packets
   static constexpr const char* UNFORCED_MARK = "Unforced mark";  //!< Early probability marks
-  static constexpr const char* FORCED_MARK = "Forced mark";      //!< Forced marks, m_qAvg > m_maxTh
+  static constexpr const char* FORCED_MARK = "Forced mark";      //!< Forced marks
 
 protected:
   /**
@@ -159,10 +114,7 @@ private:
    */
   void RunUpdateRule ();
 
-  Stats m_stats;                                //!< REM statistics
-
   // ** Variables supplied by user
-  //Queue::QueueMode m_mode;                      //!< Mode (bytes or packets)
   double m_inW;                                 //!< Weight assigned to number of bytes/packets arriving (input rate) during one update time interval.
   double m_phi;                                 //!< Constant for calculation of probability
   uint32_t m_meanPktSize;                       //!< Average packet size in bytes
@@ -170,7 +122,6 @@ private:
   uint32_t m_target;                            //!< Target queue length (or target buffer occupancy as mentioned in REM paper)
   double m_gamma;                               //!< Weight assigned to deviation of queue length from target and input rate from capacity
   double m_alpha;                               //!< Weight assigned to difference between current queue length and m_target
-  uint32_t m_queueLimit;                        //!< Queue limit in packets
   double m_ptc;                                 //!< Bandwidth in packets per second
   DataRate m_linkBandwidth;                     //!< Link bandwidth
   bool m_useEcn;                                //!< True if ECN is used (packets are marked instead of being dropped)

@@ -46,12 +46,6 @@ TypeId RemQueueDisc::GetTypeId (void)
     .SetParent<QueueDisc> ()
     .SetGroupName ("TrafficControl")
     .AddConstructor<RemQueueDisc> ()
-    /*.AddAttribute ("Mode",
-                   "Determines unit for QueueLength",
-                   EnumValue (Queue::QUEUE_MODE_PACKETS),
-                   MakeEnumAccessor (&RemQueueDisc::SetMode),
-                   MakeEnumChecker (Queue::QUEUE_MODE_BYTES, "QUEUE_MODE_BYTES",
-                                    Queue::QUEUE_MODE_PACKETS, "QUEUE_MODE_PACKETS"))*/
     .AddAttribute ("InputWeight",
                    "Weight assigned to input rate",
                    DoubleValue (1.0),
@@ -87,11 +81,6 @@ TypeId RemQueueDisc::GetTypeId (void)
                    DoubleValue (0.1),
                    MakeDoubleAccessor (&RemQueueDisc::m_alpha),
                    MakeDoubleChecker<double> ())
-    /*.AddAttribute ("QueueLimit",
-                   "Queue limit in packets",
-                   UintegerValue (50),
-                   MakeUintegerAccessor (&RemQueueDisc::m_queueLimit),
-                   MakeUintegerChecker<uint32_t> ())*/
     .AddAttribute ("MaxSize",
                    "The maximum number of packets accepted by this queue disc",
                    QueueSizeValue (QueueSize ("25p")),
@@ -108,7 +97,6 @@ TypeId RemQueueDisc::GetTypeId (void)
                    BooleanValue (false),
                    MakeBooleanAccessor (&RemQueueDisc::m_useEcn),
                    MakeBooleanChecker ())
-
   ;
 
   return tid;
@@ -135,52 +123,6 @@ RemQueueDisc::DoDispose (void)
   Simulator::Remove (m_rtrsEvent);
   QueueDisc::DoDispose ();
 }
-/*
-void
-RemQueueDisc::SetMode (Queue::QueueMode mode)
-{
-  NS_LOG_FUNCTION (this << mode);
-  m_mode = mode;
-}
-
-Queue::QueueMode
-RemQueueDisc::GetMode (void)
-{
-  NS_LOG_FUNCTION (this);
-  return m_mode;
-}
-
-void
-RemQueueDisc::SetQueueLimit (uint32_t lim)
-{
-  NS_LOG_FUNCTION (this << lim);
-  m_queueLimit = lim;
-}
-
-uint32_t
-RemQueueDisc::GetQueueSize (void)
-{
-  NS_LOG_FUNCTION (this);
-  if (GetMode () == Queue::QUEUE_MODE_BYTES)
-    {
-      return GetInternalQueue (0)->GetNBytes ();
-    }
-  else if (GetMode () == Queue::QUEUE_MODE_PACKETS)
-    {
-      return GetInternalQueue (0)->GetNPackets ();
-    }
-  else
-    {
-      NS_ABORT_MSG ("Unknown REM mode.");
-    }
-}
-
-RemQueueDisc::Stats
-RemQueueDisc::GetStats ()
-{
-  NS_LOG_FUNCTION (this);
-  return m_stats;
-}*/
 
 int64_t
 RemQueueDisc::AssignStreams (int64_t stream)
@@ -201,10 +143,6 @@ RemQueueDisc::InitializeParams (void)
   m_count = 0;
   m_countInBytes = 0;
 
-  //m_stats.qLimDrop = 0;
-  //m_stats.unforcedDrop = 0;
-  //m_stats.unforcedMark = 0;
-
   m_ptc = m_linkBandwidth.GetBitRate () / (8.0 * m_meanPktSize);
 }
 
@@ -212,37 +150,29 @@ bool
 RemQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 {
   NS_LOG_FUNCTION (this << item);
-  if (GetMaxSize ().GetUnit () == QueueSizeUnit::PACKETS/*GetMode () == Queue::QUEUE_MODE_PACKETS*/)
+  if (GetMaxSize ().GetUnit () == QueueSizeUnit::PACKETS)
     {
       m_count++;
     }
   else
     {
-      //m_count += item->GetPacketSize ();
       m_count += item->GetSize ();
     }
 
-  //uint32_t nQueued = GetQueueSize ();
   uint32_t nQueued = GetInternalQueue (0)->GetCurrentSize ().GetValue ();
 
-  if (/*(GetMode () == Queue::QUEUE_MODE_PACKETS && nQueued + 1 > m_queueLimit)
-      ||(GetMode () == Queue::QUEUE_MODE_BYTES && nQueued + item->GetPacketSize () > m_queueLimit)*/
-      (GetMaxSize ().GetUnit () == QueueSizeUnit::PACKETS && nQueued + 1 > GetMaxSize (). GetValue())
+  if ((GetMaxSize ().GetUnit () == QueueSizeUnit::PACKETS && nQueued + 1 > GetMaxSize (). GetValue())
       || (GetMaxSize ().GetUnit () == QueueSizeUnit::BYTES && nQueued + item->GetSize () > GetMaxSize (). GetValue())
      )
     {
       // Drops due to queue limit: reactive
-      //Drop (item);
       DropBeforeEnqueue (item, FORCED_DROP);
-      //m_stats.qLimDrop++;
       return false;
     }
   else if (!m_useEcn && DropEarly (item))
     {
       // Early probability drop: proactive
-      //Drop (item);
       DropBeforeEnqueue (item, UNFORCED_DROP);
-      //m_stats.unforcedDrop++;
       return false;
     }
 
@@ -266,8 +196,6 @@ bool RemQueueDisc::DropEarly (Ptr<QueueDiscItem> item)
   bool earlyDrop = true;
   double u = m_uv->GetValue ();
 
- std::cout << p << std::endl;
-
   if (u > p)
     {
       earlyDrop = false;
@@ -289,15 +217,12 @@ RemQueueDisc::DoDequeue (void)
     }
   else
     {
-      //Ptr<QueueDiscItem> item = StaticCast<QueueDiscItem> (GetInternalQueue (0)->Dequeue ());
       Ptr<QueueDiscItem> item = GetInternalQueue (0)->Dequeue ();
 
       if (m_useEcn)
         {
-          if (DropEarly (item) && Mark (item, UNFORCED_MARK)/*item->Mark ()*/)
-            {
-              // m_stats.unforcedMark++;
-            }
+          DropEarly (item);
+          Mark (item, UNFORCED_MARK);
         }
 
       NS_LOG_LOGIC ("Popped " << item);
@@ -319,7 +244,6 @@ RemQueueDisc::DoPeek (void) const
       return 0;
     }
 
-  //Ptr<const QueueDiscItem> item = StaticCast<const QueueDiscItem> (GetInternalQueue (0)->Peek ());
   Ptr<const QueueDiscItem> item = GetInternalQueue (0)->Peek ();
 
   NS_LOG_LOGIC ("Number packets " << GetInternalQueue (0)->GetNPackets ());
@@ -346,19 +270,15 @@ RemQueueDisc::RunUpdateRule (void)
 
   in_avg = in_avg * (1.0 - m_inW);
 
-  if (GetMaxSize ().GetUnit () == QueueSizeUnit::BYTES/*GetMode () == Queue::QUEUE_MODE_BYTES*/)
+  if (GetMaxSize ().GetUnit () == QueueSizeUnit::BYTES)
     {
       in_avg = in_avg + m_inW * in / m_meanPktSize;
-      //nQueued = GetQueueSize () / m_meanPktSize;
       nQueued = GetInternalQueue (0)->GetCurrentSize ().GetValue () / m_meanPktSize;
-      //nQueued = GetCurrentSize ().GetValue () / m_meanPktSize;
     }
   else
     {
       in_avg = in_avg + m_inW * in;
-      //nQueued = GetQueueSize ();
       nQueued = GetInternalQueue (0)->GetCurrentSize ().GetValue ();
-      //nQueued = GetCurrentSize ().GetValue ();
     }
 
   // c measures the maximum number of packets that
@@ -402,16 +322,6 @@ RemQueueDisc::CheckConfig (void)
   if (GetNInternalQueues () == 0)
     {
       // create a DropTail queue
-      /*Ptr<Queue> queue = CreateObjectWithAttributes<DropTailQueue> ("Mode", EnumValue (m_mode));
-      if (m_mode == Queue::QUEUE_MODE_PACKETS)
-        {
-          queue->SetMaxPackets (m_queueLimit);
-        }
-      else
-        {
-          //queue->SetMaxBytes (m_queueLimit);
-        }
-      AddInternalQueue (queue);*/
       AddInternalQueue (CreateObjectWithAttributes<DropTailQueue<QueueDiscItem> >
                           ("MaxSize", QueueSizeValue (GetMaxSize ())));
     }
@@ -421,19 +331,6 @@ RemQueueDisc::CheckConfig (void)
       NS_LOG_ERROR ("RemQueueDisc needs 1 internal queue");
       return false;
     }
-
-  /*if (GetInternalQueue (0)->GetMode () != m_mode)
-    {
-      NS_LOG_ERROR ("The mode of the provided queue does not match the mode set on the RemQueueDisc");
-      return false;
-    }
-
-  if ((m_mode ==  Queue::QUEUE_MODE_PACKETS && GetInternalQueue (0)->GetMaxPackets () < m_queueLimit)
-      || (m_mode ==  Queue::QUEUE_MODE_BYTES && GetInternalQueue (0)->GetMaxBytes () < m_queueLimit))
-    {
-      NS_LOG_ERROR ("The size of the internal queue is less than the queue disc limit");
-      return false;
-    }*/
 
   return true;
 }

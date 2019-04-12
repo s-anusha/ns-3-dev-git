@@ -218,6 +218,8 @@ bool PieQueueDisc::DropEarly (Ptr<QueueDiscItem> item, uint32_t qSize)
       return false;
     }
 
+  std::cout << p << std::endl;
+
   if (u > p)
     {
       earlyDrop = false;

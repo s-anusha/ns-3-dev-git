@@ -694,6 +694,8 @@ RedQueueDisc::DropEarly (Ptr<QueueDiscItem> item, uint32_t qSize)
         }
     }
 
+  std::cout << m_vProb << std::endl;
+
   if (u <= m_vProb)
     {
       NS_LOG_LOGIC ("u <= m_vProb; u " << u << "; m_vProb " << m_vProb);
