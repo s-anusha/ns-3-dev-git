@@ -194,9 +194,9 @@ main (int argc, char *argv[])
   NS_LOG_INFO ("Set REM params");
   //Config::SetDefault ("ns3::RemQueueDisc::Mode", StringValue ("QUEUE_MODE_PACKETS"));
   Config::SetDefault ("ns3::RemQueueDisc::MeanPktSize", UintegerValue (meanPktSize));
-  Config::SetDefault ("ns3::RemQueueDisc::Target", UintegerValue (700));
+  Config::SetDefault ("ns3::RemQueueDisc::Target", UintegerValue (70));
   //Config::SetDefault ("ns3::RemQueueDisc::QueueLimit", UintegerValue (400));
-  Config::SetDefault ("ns3::RemQueueDisc::MaxSize", StringValue ("100p"));
+  Config::SetDefault ("ns3::RemQueueDisc::MaxSize", StringValue ("400p"));
 
   NS_LOG_INFO ("Install internet stack on all nodes.");
   InternetStackHelper internet;

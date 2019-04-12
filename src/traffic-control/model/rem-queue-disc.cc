@@ -223,12 +223,13 @@ RemQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
     }
 
   //uint32_t nQueued = GetQueueSize ();
-  QueueSize nQueued = GetCurrentSize ();
-  // uint32_t nQueuedB = GetInternalQueue (0)->GetCurrentSize ().GetValue ();
+  uint32_t nQueued = GetInternalQueue (0)->GetCurrentSize ().GetValue ();
 
   if (/*(GetMode () == Queue::QUEUE_MODE_PACKETS && nQueued + 1 > m_queueLimit)
       ||(GetMode () == Queue::QUEUE_MODE_BYTES && nQueued + item->GetPacketSize () > m_queueLimit)*/
-      (/*GetMaxSize ().GetUnit () == QueueSizeUnit::PACKETS && */nQueued + item > GetMaxSize()))
+      (GetMaxSize ().GetUnit () == QueueSizeUnit::PACKETS && nQueued + 1 > GetMaxSize (). GetValue())
+      || (GetMaxSize ().GetUnit () == QueueSizeUnit::BYTES && nQueued + item->GetSize () > GetMaxSize (). GetValue())
+     )
     {
       // Drops due to queue limit: reactive
       //Drop (item);
@@ -265,6 +266,8 @@ bool RemQueueDisc::DropEarly (Ptr<QueueDiscItem> item)
   bool earlyDrop = true;
   double u = m_uv->GetValue ();
 
+ std::cout << p << std::endl;
+
   if (u > p)
     {
       earlyDrop = false;
@@ -289,13 +292,13 @@ RemQueueDisc::DoDequeue (void)
       //Ptr<QueueDiscItem> item = StaticCast<QueueDiscItem> (GetInternalQueue (0)->Dequeue ());
       Ptr<QueueDiscItem> item = GetInternalQueue (0)->Dequeue ();
 
-      /*if (m_useEcn)
+      if (m_useEcn)
         {
-          if (DropEarly (item) && item->Mark ())
+          if (DropEarly (item) && Mark (item, UNFORCED_MARK)/*item->Mark ()*/)
             {
-              m_stats.unforcedMark++;
+              // m_stats.unforcedMark++;
             }
-        }*/
+        }
 
       NS_LOG_LOGIC ("Popped " << item);
 
@@ -329,8 +332,7 @@ void
 RemQueueDisc::RunUpdateRule (void)
 {
   NS_LOG_FUNCTION (this);
-  double lp, in, in_avg, /*nQueued,*/ c, exp, prob;
-  uint32_t nQueued;
+  double lp, in, in_avg, nQueued, c, exp, prob;
 
   // lp is link price (congestion measure)
   lp = m_linkPrice;
@@ -348,13 +350,15 @@ RemQueueDisc::RunUpdateRule (void)
     {
       in_avg = in_avg + m_inW * in / m_meanPktSize;
       //nQueued = GetQueueSize () / m_meanPktSize;
-      nQueued = GetCurrentSize ().GetValue () / m_meanPktSize;
+      nQueued = GetInternalQueue (0)->GetCurrentSize ().GetValue () / m_meanPktSize;
+      //nQueued = GetCurrentSize ().GetValue () / m_meanPktSize;
     }
   else
     {
       in_avg = in_avg + m_inW * in;
       //nQueued = GetQueueSize ();
-      nQueued = GetCurrentSize ().GetValue ();
+      nQueued = GetInternalQueue (0)->GetCurrentSize ().GetValue ();
+      //nQueued = GetCurrentSize ().GetValue ();
     }
 
   // c measures the maximum number of packets that
